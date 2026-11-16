@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101014">
+<title>DuoVEX | Clip Cutter</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#101014;color:#fff;
+ font-family:Arial,sans-serif;
+}
+header{
+ padding:20px;border-bottom:1px solid #292932;
+ display:flex;align-items:center;gap:12px;
+}
+.logo{
+ background:#7955ff;padding:10px 13px;
+ border-radius:10px;font-weight:bold;font-size:22px;
+}
+header h2{margin:0;font-size:22px}
+header p{margin:4px 0 0;color:#999;font-size:11px}
+main{max-width:700px;margin:auto;padding:22px 16px}
+h3{font-size:16px;margin-bottom:12px}
+input{
+ width:100%;padding:15px;background:#1c1c24;
+ border:1px solid #343440;border-radius:9px;
+ color:white;font-size:14px;outline:none;
+}
+input:focus{border-color:#7955ff}
+button{
+ border:0;border-radius:9px;padding:14px;
+ color:white;background:#7955ff;
+ font-size:14px;font-weight:bold;width:100%;
+ cursor:pointer;margin-top:12px;
+}
+button:active{opacity:.8}
+.panel{
+ background:#18181f;border:1px solid #30303a;
+ border-radius:13px;padding:17px;margin-bottom:20px;
+}
+.preview{
+ width:100%;aspect-ratio:16/9;
+ background:#09090d;border-radius:9px;
+ display:flex;align-items:center;justify-content:center;
+ overflow:hidden;color:#888;
+}
+.preview iframe{width:100%;height:100%;border:0}
+.times{
+ display:grid;grid-template-columns:1fr 1fr;gap:12px;
+}
+small{color:#999;display:block;margin-bottom:8px}
+.duration{
+ margin-top:15px;background:#24232e;
+ padding:13px;border-radius:8px;color:#c6b8ff;
+}
+#message{font-size:13px;color:#b9aaff;margin-top:12px}
+footer{text-align:center;color:#666;padding:25px;font-size:12px}
+</style>
+</head>
+
+<body>
+
+<header>
+ <div class="logo">D</div>
+ <div>
+  <h2>DuoVEX</h2>
+  <p>YOUTUBE CLIP CUTTER</p>
+ </div>
+</header>
+
+<main>
+
+<div class="panel">
+ <h3>YouTube Video URL</h3>
+ <input id="url" placeholder="Paste YouTube video link here">
+ <button onclick="loadVideo()">FETCH VIDEO</button>
+</div>
+
+<div class="panel">
+ <h3>Video Preview</h3>
+ <div class="preview" id="preview">
+  Paste a YouTube link to preview
+ </div>
+</div>
+
+<div class="panel">
+ <h3>✂ Clip Settings</h3>
+
+ <div class="times">
+  <div>
+   <small>START TIME (HH:MM:SS)</small>
+   <input id="start" value="00:00:00">
+  </div>
+  <div>
+   <small>END TIME (HH:MM:SS)</small>
+   <input id="end" value="00:00:30">
+  </div>
+ </div>
+
+ <div class="duration" id="duration">
+  Clip Duration: 30 seconds
+ </div>
+
+ <button onclick="prepareClip()">PREPARE CLIP</button>
+ <div id="message"></div>
+</div>
+
+</main>
+
+<footer>
+ DuoVEX © 2026 | Made for Creators
+</footer>
+
+<script>
+let videoId = "";
+
+function getVideoId(url){
+ try{
+  const u = new URL(url);
+
+  if(u.hostname.includes("youtu.be"))
+   return u.pathname.split("/")[1];
+
+  if(u.searchParams.get("v"))
+   return u.searchParams.get("v");
+
+  const parts = u.pathname.split("/");
+  const i = parts.findIndex(x =>
+   ["live","embed","shorts"].includes(x)
+  );
+
+  return i >= 0 ? parts[i+1] : null;
+ }catch(e){
+  return null;
+ }
+}
+
+function toSeconds(value){
+ const parts = value.trim().split(":").map(Number);
+
+ if(parts.length !== 3 ||
+    parts.some(n => !Number.isInteger(n) || n < 0))
+  return NaN;
+
+ return parts[0]*3600 + parts[1]*60 + parts[2];
+}
+
+function loadVideo(){
+ const url = document.getElementById("url").value.trim();
+ videoId = getVideoId(url);
+
+ if(!videoId){
+  document.getElementById("message").textContent =
+   "Please enter a valid YouTube link.";
+  return;
+ }
+
+ document.getElementById("preview").innerHTML =
+  `<iframe src="https://www.youtube.com/embed/${encodeURIComponent(videoId)}"
+  allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+
+ document.getElementById("message").textContent =
+  "Video preview loaded successfully!";
+}
+
+function prepareClip(){
+ if(!videoId){
+  document.getElementById("message").textContent =
+   "First fetch a YouTube video.";
+  return;
+ }
+
+ const start = toSeconds(document.getElementById("start").value);
+ const end = toSeconds(document.getElementById("end").value);
+
+ if(!Number.isFinite(start) || !Number.isFinite(end)){
+  document.getElementById("message").textContent =
+   "Timestamp format HH:MM:SS mein daalo.";
+  return;
+ }
+
+ if(end <= start){
+  document.getElementById("message").textContent =
+   "End time must be greater than start time.";
+  return;
+ }
+
+ document.getElementById("duration").textContent =
+  "Clip Duration: " + (end-start) + " seconds";
+
+ document.getElementById("message").textContent =
+  "Timestamps valid! Actual MP4 cutting will be enabled after backend integration.";
+}
+</script>
+
+</body>
+</html>
